@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "288465091829",
+    "project_id": "servicegenie-aad27",
+    "storage_bucket": "servicegenie-aad27.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:288465091829:android:48c1d89f4b1bc22c66d9bc",
+        "android_client_info": {
+          "package_name": "com.example.service_genie"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyATZSe-6u-YDy6Zki3uTSwEnnUbOFiBVvM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
