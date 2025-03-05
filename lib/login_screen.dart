@@ -1,3 +1,4 @@
+// login_screen.dart
 import 'dart:ui'; // Required for ImageFilter.blur
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
