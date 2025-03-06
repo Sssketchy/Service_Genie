@@ -4,6 +4,8 @@ import 'package:location/location.dart';
 import 'login_choice_screen.dart';
 
 class MechanicHome extends StatefulWidget {
+  const MechanicHome({super.key});
+
   @override
   _MechanicHomeState createState() => _MechanicHomeState();
 }
@@ -20,6 +22,7 @@ class _MechanicHomeState extends State<MechanicHome> {
   }
 
   Future<void> _getLocation() async {
+    setState(() => isFetchingLocation = true);
     Location location = Location();
     bool serviceEnabled;
     PermissionStatus permissionGranted;
@@ -76,10 +79,12 @@ class _MechanicHomeState extends State<MechanicHome> {
       ),
       body: Stack(
         children: [
+          // Display location at the top left with Refresh Button
           Positioned(
             top: 20,
             left: 20,
-            child:
+            child: Row(
+              children: [
                 isFetchingLocation
                     ? CircularProgressIndicator()
                     : Text(
@@ -89,7 +94,15 @@ class _MechanicHomeState extends State<MechanicHome> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                SizedBox(width: 10),
+                IconButton(
+                  icon: Icon(Icons.refresh, color: Colors.blue),
+                  onPressed: _getLocation, // Refresh location when clicked
+                ),
+              ],
+            ),
           ),
+          // Main Content
           Center(
             child: Text("Welcome, Mechanic!", style: TextStyle(fontSize: 20)),
           ),

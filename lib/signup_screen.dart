@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'login_screen.dart';
 
 class SignupScreen extends StatefulWidget {
+  const SignupScreen({super.key});
+
   @override
   _SignupScreenState createState() => _SignupScreenState();
 }
@@ -27,31 +29,23 @@ class _SignupScreenState extends State<SignupScreen> {
     setState(() => isLoading = true);
 
     try {
-      // Create user & store in Firestore in parallel (reducing wait time)
-      UserCredential userCredential = await _auth
-          .createUserWithEmailAndPassword(email: email, password: password)
-          .timeout(
-            Duration(seconds: 10),
-            onTimeout: () {
-              throw FirebaseAuthException(
-                code: 'timeout',
-                message: "Signup timed out. Try again.",
-              );
-            },
-          );
+      // Create user in Firebase Authentication
+      UserCredential userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: password);
 
       String uid = userCredential.user!.uid;
 
-      await _firestore.collection("users").doc(uid).set({
+      // Store user data in Firestore
+      await FirebaseFirestore.instance.collection("users").doc(uid).set({
         "uid": uid,
         "name": name,
         "email": email,
         "role": role,
       });
 
-      setState(() => isLoading = false);
+      print("Signup successful for $email");
 
-      // Navigate to Login Screen after successful signup
+      // Navigate to login screen
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => LoginScreen(userRole: role)),
@@ -61,10 +55,8 @@ class _SignupScreenState extends State<SignupScreen> {
         SnackBar(content: Text("Signup Successful! Please Login.")),
       );
     } on FirebaseAuthException catch (e) {
-      setState(() => isLoading = false);
-
-      // Handle Firebase errors quickly
       String errorMessage = "Signup failed. Try again.";
+
       if (e.code == 'email-already-in-use') {
         errorMessage = "This email is already registered. Try logging in!";
       } else if (e.code == 'timeout') {
@@ -75,11 +67,13 @@ class _SignupScreenState extends State<SignupScreen> {
         context,
       ).showSnackBar(SnackBar(content: Text(errorMessage)));
     } catch (e) {
-      setState(() => isLoading = false);
+      print("Signup Error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("An error occurred. Please try again.")),
       );
     }
+
+    setState(() => isLoading = false);
   }
 
   @override
