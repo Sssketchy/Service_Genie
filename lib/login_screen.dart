@@ -1,4 +1,4 @@
-import 'dart:ui'; // Required for ImageFilter.blur
+// login_screen.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +8,7 @@ import 'mechanic_home.dart';
 class LoginScreen extends StatefulWidget {
   final String userRole; // Accepts role from previous screen
 
-  LoginScreen({required this.userRole});
+  const LoginScreen({super.key, required this.userRole});
 
   @override
   _LoginScreenState createState() => _LoginScreenState();
@@ -29,6 +29,8 @@ class _LoginScreenState extends State<LoginScreen> {
         password: password,
       );
 
+      print("✅ Login Successful: ${userCredential.user!.uid}");
+
       // Fetch role from Firestore
       DocumentSnapshot userDoc =
           await _firestore
@@ -36,32 +38,56 @@ class _LoginScreenState extends State<LoginScreen> {
               .doc(userCredential.user!.uid)
               .get();
 
+      if (!userDoc.exists) {
+        throw FirebaseAuthException(
+          code: "no-user-data",
+          message: "User data missing in Firestore.",
+        );
+      }
+
       String role = userDoc["role"];
 
       if (role == widget.userRole) {
-        // Navigate to respective dashboard
-        if (role == "Customer") {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => CustomerHome()),
-          );
-        } else {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => MechanicHome()),
-          );
-        }
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder:
+                (context) =>
+                    role == "Customer" ? CustomerHome() : MechanicHome(),
+          ),
+        );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Incorrect role selected for this account.")),
+        throw FirebaseAuthException(
+          code: "wrong-role",
+          message: "Incorrect role selected for this account.",
         );
       }
+    } on FirebaseAuthException catch (e) {
+      print("❌ FirebaseAuthException: ${e.code} - ${e.message}");
+
+      String errorMessage = "Login failed. Check your credentials.";
+      if (e.code == 'user-not-found') {
+        errorMessage = "No account found with this email. Please sign up.";
+      } else if (e.code == 'wrong-password') {
+        errorMessage = "Incorrect password. Try again.";
+      } else if (e.code == 'invalid-email') {
+        errorMessage = "Enter a valid email address.";
+      } else if (e.code == 'wrong-role') {
+        errorMessage = "You selected the wrong role. Try again.";
+      } else if (e.code == 'no-user-data') {
+        errorMessage = "User data is missing in Firestore.";
+      }
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(errorMessage)));
     } catch (e) {
-      print("Login Error: $e");
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Login failed. Check your credentials.")),
-      );
+      print("❌ Unexpected Error: $e"); // Print the full error in console
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text("Unexpected Error: $e")));
     }
+
     setState(() => isLoading = false);
   }
 
@@ -75,19 +101,6 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Image.asset(
               "assets/handshake.webp", // Replace with your image file
               fit: BoxFit.cover,
-            ),
-          ),
-
-          // Blur Effect
-          Positioned.fill(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(
-                sigmaX: 3,
-                sigmaY: 3,
-              ), // Adjust blur intensity
-              child: Container(
-                color: Colors.black.withOpacity(0.2),
-              ), // Slight dark overlay
             ),
           ),
 

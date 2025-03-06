@@ -1,9 +1,12 @@
+// login_choice_screen.dart
 import 'dart:ui'; // Required for ImageFilter.blur
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import 'signup_screen.dart';
 
 class LoginChoiceScreen extends StatelessWidget {
+  const LoginChoiceScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
