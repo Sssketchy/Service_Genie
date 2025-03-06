@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
@@ -22,40 +23,32 @@ class _MechanicHomeState extends State<MechanicHome> {
   }
 
   Future<void> _getLocation() async {
-    setState(() => isFetchingLocation = true);
     Location location = Location();
-    bool serviceEnabled;
-    PermissionStatus permissionGranted;
+    bool serviceEnabled = await location.serviceEnabled();
+    if (!serviceEnabled) serviceEnabled = await location.requestService();
+    if (!serviceEnabled) return;
 
-    serviceEnabled = await location.serviceEnabled();
-    if (!serviceEnabled) {
-      serviceEnabled = await location.requestService();
-      if (!serviceEnabled) {
-        if (mounted) setState(() => isFetchingLocation = false);
-        return;
-      }
-    }
-
-    permissionGranted = await location.hasPermission();
+    PermissionStatus permissionGranted = await location.hasPermission();
     if (permissionGranted == PermissionStatus.denied) {
       permissionGranted = await location.requestPermission();
-      if (permissionGranted != PermissionStatus.granted) {
-        if (mounted) setState(() => isFetchingLocation = false);
-        return;
-      }
+      if (permissionGranted != PermissionStatus.granted) return;
     }
 
     try {
       LocationData locationData = await location.getLocation();
-      if (mounted) {
-        setState(() {
-          latitude = locationData.latitude;
-          longitude = locationData.longitude;
-          isFetchingLocation = false;
-        });
+      double? latitude = locationData.latitude;
+      double? longitude = locationData.longitude;
+
+      // ✅ Store location in Firestore
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await FirebaseFirestore.instance.collection("users").doc(user.uid).set({
+          "latitude": latitude,
+          "longitude": longitude,
+        }, SetOptions(merge: true));
       }
     } catch (e) {
-      if (mounted) setState(() => isFetchingLocation = false);
+      print("Error getting location: $e");
     }
   }
 
