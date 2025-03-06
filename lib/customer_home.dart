@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 import 'login_choice_screen.dart';
 import 'nearby_mechanics_screen.dart'; // Import the new screen
+import 'request_mechanic_page.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CustomerHome extends StatefulWidget {
@@ -142,7 +143,10 @@ class _CustomerHomeState extends State<CustomerHome> {
                 // Feature 2 Button (Friend's work)
                 ElevatedButton(
                   onPressed: () {
-                    // TODO: Friend's feature logic here
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => RequestPage()),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
