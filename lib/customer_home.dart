@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 import 'login_choice_screen.dart';
+import 'nearby_mechanics_screen.dart'; // Import the new screen
 
 class CustomerHome extends StatefulWidget {
   const CustomerHome({super.key});
@@ -22,7 +23,7 @@ class _CustomerHomeState extends State<CustomerHome> {
   }
 
   Future<void> _getLocation() async {
-    setState(() => isFetchingLocation = true); // Show loading before fetching
+    setState(() => isFetchingLocation = true);
     Location location = Location();
     bool serviceEnabled;
     PermissionStatus permissionGranted;
@@ -79,7 +80,6 @@ class _CustomerHomeState extends State<CustomerHome> {
       ),
       body: Stack(
         children: [
-          // Display location at the top left with Refresh Button
           Positioned(
             top: 20,
             left: 20,
@@ -97,12 +97,11 @@ class _CustomerHomeState extends State<CustomerHome> {
                 SizedBox(width: 10),
                 IconButton(
                   icon: Icon(Icons.refresh, color: Colors.blue),
-                  onPressed: _getLocation, // Refresh location when clicked
+                  onPressed: _getLocation,
                 ),
               ],
             ),
           ),
-          // Main Content
           Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -110,10 +109,15 @@ class _CustomerHomeState extends State<CustomerHome> {
                 Text("Welcome, Customer!", style: TextStyle(fontSize: 20)),
                 SizedBox(height: 20),
 
-                // Feature 1 Button
+                // Button to navigate to the "List of Mechanics Nearby" screen
                 ElevatedButton(
                   onPressed: () {
-                    // TODO: Your feature logic here
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => NearbyMechanicsScreen(),
+                      ),
+                    );
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue,
@@ -123,13 +127,13 @@ class _CustomerHomeState extends State<CustomerHome> {
                     ),
                   ),
                   child: Text(
-                    "Feature 1 (Your Work)",
+                    "Find Nearby Mechanics",
                     style: TextStyle(fontSize: 16, color: Colors.white),
                   ),
                 ),
                 SizedBox(height: 20),
 
-                // Feature 2 Button
+                // Feature 2 Button (Friend's work)
                 ElevatedButton(
                   onPressed: () {
                     // TODO: Friend's feature logic here
