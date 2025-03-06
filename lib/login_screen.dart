@@ -9,7 +9,7 @@ import 'mechanic_home.dart';
 class LoginScreen extends StatefulWidget {
   final String userRole; // Accepts role from previous screen
 
-  LoginScreen({required this.userRole});
+  const LoginScreen({super.key, required this.userRole});
 
   @override
   _LoginScreenState createState() => _LoginScreenState();
@@ -42,12 +42,12 @@ class _LoginScreenState extends State<LoginScreen> {
       if (role == widget.userRole) {
         // Navigate to respective dashboard
         if (role == "Customer") {
-          Navigator.pushReplacement(
+          Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => CustomerHome()),
           );
         } else {
-          Navigator.pushReplacement(
+          Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => MechanicHome()),
           );

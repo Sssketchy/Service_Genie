@@ -4,6 +4,8 @@ import 'package:location/location.dart';
 import 'login_choice_screen.dart';
 
 class CustomerHome extends StatefulWidget {
+  const CustomerHome({super.key});
+
   @override
   _CustomerHomeState createState() => _CustomerHomeState();
 }
@@ -20,6 +22,7 @@ class _CustomerHomeState extends State<CustomerHome> {
   }
 
   Future<void> _getLocation() async {
+    setState(() => isFetchingLocation = true); // Show loading before fetching
     Location location = Location();
     bool serviceEnabled;
     PermissionStatus permissionGranted;
@@ -76,10 +79,12 @@ class _CustomerHomeState extends State<CustomerHome> {
       ),
       body: Stack(
         children: [
+          // Display location at the top left with Refresh Button
           Positioned(
             top: 20,
             left: 20,
-            child:
+            child: Row(
+              children: [
                 isFetchingLocation
                     ? CircularProgressIndicator()
                     : Text(
@@ -89,9 +94,60 @@ class _CustomerHomeState extends State<CustomerHome> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
+                SizedBox(width: 10),
+                IconButton(
+                  icon: Icon(Icons.refresh, color: Colors.blue),
+                  onPressed: _getLocation, // Refresh location when clicked
+                ),
+              ],
+            ),
           ),
+          // Main Content
           Center(
-            child: Text("Welcome, Customer!", style: TextStyle(fontSize: 20)),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text("Welcome, Customer!", style: TextStyle(fontSize: 20)),
+                SizedBox(height: 20),
+
+                // Feature 1 Button
+                ElevatedButton(
+                  onPressed: () {
+                    // TODO: Your feature logic here
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    padding: EdgeInsets.symmetric(vertical: 15, horizontal: 40),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: Text(
+                    "Feature 1 (Your Work)",
+                    style: TextStyle(fontSize: 16, color: Colors.white),
+                  ),
+                ),
+                SizedBox(height: 20),
+
+                // Feature 2 Button
+                ElevatedButton(
+                  onPressed: () {
+                    // TODO: Friend's feature logic here
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    padding: EdgeInsets.symmetric(vertical: 15, horizontal: 40),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: Text(
+                    "Feature 2 (Friend's Work)",
+                    style: TextStyle(fontSize: 16, color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
