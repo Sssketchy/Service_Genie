@@ -24,32 +24,45 @@ class _CustomerHomeState extends State<CustomerHome> {
   }
 
   Future<void> _getLocation() async {
+    setState(() => isFetchingLocation = true);
     Location location = Location();
-    bool serviceEnabled = await location.serviceEnabled();
-    if (!serviceEnabled) serviceEnabled = await location.requestService();
-    if (!serviceEnabled) return;
+    bool serviceEnabled;
+    PermissionStatus permissionGranted;
 
-    PermissionStatus permissionGranted = await location.hasPermission();
+    serviceEnabled = await location.serviceEnabled();
+    if (!serviceEnabled) {
+      serviceEnabled = await location.requestService();
+      if (!serviceEnabled) {
+        print("❌ Location services are disabled.");
+        setState(() => isFetchingLocation = false);
+        return;
+      }
+    }
+
+    permissionGranted = await location.hasPermission();
     if (permissionGranted == PermissionStatus.denied) {
       permissionGranted = await location.requestPermission();
-      if (permissionGranted != PermissionStatus.granted) return;
+      if (permissionGranted != PermissionStatus.granted) {
+        print("❌ Location permission denied.");
+        setState(() => isFetchingLocation = false);
+        return;
+      }
     }
 
     try {
       LocationData locationData = await location.getLocation();
-      double? latitude = locationData.latitude;
-      double? longitude = locationData.longitude;
+      print(
+        "✅ Location fetched: Lat=${locationData.latitude}, Lng=${locationData.longitude}",
+      );
 
-      // ✅ Store location in Firestore
-      User? user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        await FirebaseFirestore.instance.collection("users").doc(user.uid).set({
-          "latitude": latitude,
-          "longitude": longitude,
-        }, SetOptions(merge: true));
-      }
+      setState(() {
+        latitude = locationData.latitude;
+        longitude = locationData.longitude;
+        isFetchingLocation = false;
+      });
     } catch (e) {
-      print("Error getting location: $e");
+      print("❌ Error fetching location: $e");
+      setState(() => isFetchingLocation = false);
     }
   }
 
