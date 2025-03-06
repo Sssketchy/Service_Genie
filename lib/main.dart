@@ -1,10 +1,9 @@
-// main.dart
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
-import 'login_choice_screen.dart'; // First screen with role selection
+import 'login_choice_screen.dart';
 import 'customer_home.dart';
 import 'mechanic_home.dart';
 
@@ -15,8 +14,6 @@ void main() async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -27,12 +24,10 @@ class MyApp extends StatelessWidget {
             return Center(child: CircularProgressIndicator());
           }
 
-          // If no user is logged in, show the login choice screen
           if (!snapshot.hasData || snapshot.data == null) {
             return LoginChoiceScreen();
           }
 
-          // Fetch user role from Firestore
           return FutureBuilder<DocumentSnapshot>(
             future:
                 FirebaseFirestore.instance
@@ -41,7 +36,7 @@ class MyApp extends StatelessWidget {
                     .get(),
             builder: (context, userSnapshot) {
               if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
-                return LoginChoiceScreen(); // If no role found, send back to login choice
+                return LoginChoiceScreen();
               }
 
               String role = userSnapshot.data!["role"];
