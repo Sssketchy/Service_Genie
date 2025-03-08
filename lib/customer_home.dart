@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 import 'login_choice_screen.dart';
 import 'nearby_mechanics_screen.dart'; // Import the new screen
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CustomerHome extends StatefulWidget {
   const CustomerHome({super.key});

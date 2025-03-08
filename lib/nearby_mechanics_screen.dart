@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class NearbyMechanicsScreen extends StatelessWidget {
+  const NearbyMechanicsScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
