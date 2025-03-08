@@ -8,7 +8,7 @@ plugins {
 android {
     namespace = "com.example.service_genie"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = "29.0.13113456"  // Updated to match Firebase requirements
+    ndkVersion = "27.0.12077973"  // Updated to match Firebase requirements
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
