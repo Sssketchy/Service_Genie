@@ -46,7 +46,7 @@ class _SignupScreenState extends State<SignupScreen> {
       print("Signup successful for $email");
 
       // Navigate to login screen
-      Navigator.pushReplacement(
+      Navigator.push(
         context,
         MaterialPageRoute(builder: (context) => LoginScreen(userRole: role)),
       );
@@ -109,7 +109,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 TextField(
                   decoration: InputDecoration(
                     filled: true,
-                    fillColor: Colors.white.withOpacity(0.9),
+                    fillColor: Colors.white,
                     hintText: "Full Name",
                     prefixIcon: Icon(Icons.person, color: Colors.black),
                     border: OutlineInputBorder(
@@ -125,7 +125,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 TextField(
                   decoration: InputDecoration(
                     filled: true,
-                    fillColor: Colors.white.withOpacity(0.9),
+                    fillColor: Colors.white,
                     hintText: "Email",
                     prefixIcon: Icon(Icons.email, color: Colors.black),
                     border: OutlineInputBorder(
@@ -142,7 +142,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   obscureText: true,
                   decoration: InputDecoration(
                     filled: true,
-                    fillColor: Colors.white.withOpacity(0.9),
+                    fillColor: Colors.white,
                     hintText: "Password",
                     prefixIcon: Icon(Icons.lock, color: Colors.black),
                     border: OutlineInputBorder(

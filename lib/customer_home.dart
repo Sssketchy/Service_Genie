@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'login_choice_screen.dart';
 import 'nearby_mechanics_screen.dart'; // Import the new screen
 import 'request_mechanic_page.dart';
@@ -63,7 +64,9 @@ class _CustomerHomeState extends State<CustomerHome> {
       });
     } catch (e) {
       print("❌ Error fetching location: $e");
-      setState(() => isFetchingLocation = false);
+      if (mounted) {
+        setState(() => isFetchingLocation = false);
+      }
     }
   }
 
@@ -77,6 +80,7 @@ class _CustomerHomeState extends State<CustomerHome> {
             icon: Icon(Icons.logout),
             onPressed: () async {
               await FirebaseAuth.instance.signOut();
+              OneSignal.User.removeTag("role");
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => LoginChoiceScreen()),
