@@ -1,3 +1,4 @@
+import 'dart:async'; // 🔹 Import Timer
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -16,20 +17,21 @@ class _MechanicHomeState extends State<MechanicHome> {
   double? longitude;
   bool isFetchingLocation = true;
   Location location = Location();
-  late Stream<LocationData> locationStream;
+  User? user = FirebaseAuth.instance.currentUser;
+  Timer? _statusUpdateTimer; // ✅ Changed `late` to nullable
 
   @override
   void initState() {
     super.initState();
-    _startListeningToLocation(); // ✅ Start real-time location updates
+    _startLocationUpdates();
+    _setOnlineStatus(); // ✅ Set mechanic as "online"
   }
 
-  void _startListeningToLocation() async {
+  // ✅ Start real-time location updates
+  void _startLocationUpdates() async {
     bool serviceEnabled = await location.serviceEnabled();
-    if (!serviceEnabled) {
-      serviceEnabled = await location.requestService();
-      if (!serviceEnabled) return;
-    }
+    if (!serviceEnabled) serviceEnabled = await location.requestService();
+    if (!serviceEnabled) return;
 
     PermissionStatus permissionGranted = await location.hasPermission();
     if (permissionGranted == PermissionStatus.denied) {
@@ -37,24 +39,63 @@ class _MechanicHomeState extends State<MechanicHome> {
       if (permissionGranted != PermissionStatus.granted) return;
     }
 
-    // ✅ Listen for real-time location updates
-    locationStream = location.onLocationChanged;
-    locationStream.listen((LocationData currentLocation) async {
-      setState(() {
-        latitude = currentLocation.latitude;
-        longitude = currentLocation.longitude;
-        isFetchingLocation = false;
-      });
+    location.onLocationChanged.listen((LocationData locationData) {
+      if (mounted) {
+        setState(() {
+          latitude = locationData.latitude;
+          longitude = locationData.longitude;
+          isFetchingLocation = false;
+        });
 
-      // ✅ Store updated location in Firestore
-      User? user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        await FirebaseFirestore.instance.collection("users").doc(user.uid).set({
-          "latitude": latitude,
-          "longitude": longitude,
-        }, SetOptions(merge: true));
+        _updateLocationInFirestore();
       }
     });
+  }
+
+  // ✅ Store lat/lon in Firestore
+  Future<void> _updateLocationInFirestore() async {
+    if (user != null && latitude != null && longitude != null) {
+      await FirebaseFirestore.instance.collection("users").doc(user!.uid).set({
+        "latitude": latitude,
+        "longitude": longitude,
+      }, SetOptions(merge: true));
+    }
+  }
+
+  // ✅ Set mechanic as "online" and keep updating the status
+  Future<void> _setOnlineStatus() async {
+    if (user != null) {
+      await FirebaseFirestore.instance.collection("users").doc(user!.uid).set({
+        "status": "online",
+      }, SetOptions(merge: true));
+
+      // 🔹 Keep updating the "online" status every 30 seconds to prevent disconnection
+      _statusUpdateTimer = Timer.periodic(Duration(seconds: 30), (timer) async {
+        if (user != null) {
+          await FirebaseFirestore.instance
+              .collection("users")
+              .doc(user!.uid)
+              .update({"status": "online"});
+        }
+      });
+    }
+  }
+
+  // ✅ Set mechanic as "offline" when logging out
+  Future<void> _setOfflineStatus() async {
+    if (user != null) {
+      await FirebaseFirestore.instance
+          .collection("users")
+          .doc(user!.uid)
+          .update({"status": "offline"});
+    }
+    _statusUpdateTimer?.cancel(); // ✅ Check if timer is null before canceling
+  }
+
+  @override
+  void dispose() {
+    _statusUpdateTimer?.cancel(); // ✅ Check before canceling
+    super.dispose();
   }
 
   @override
@@ -66,6 +107,7 @@ class _MechanicHomeState extends State<MechanicHome> {
           IconButton(
             icon: Icon(Icons.logout),
             onPressed: () async {
+              await _setOfflineStatus(); // ✅ Mark as "offline" before logout
               await FirebaseAuth.instance.signOut();
               Navigator.pushReplacement(
                 context,
@@ -85,7 +127,7 @@ class _MechanicHomeState extends State<MechanicHome> {
                 isFetchingLocation
                     ? CircularProgressIndicator()
                     : Text(
-                      "Your Location:\nLat: $latitude, Lng: $longitude",
+                      "📍 Your Location:\nLat: ${latitude ?? 'Loading...'}, Lng: ${longitude ?? 'Loading...'}",
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
@@ -94,14 +136,31 @@ class _MechanicHomeState extends State<MechanicHome> {
                 SizedBox(width: 10),
                 IconButton(
                   icon: Icon(Icons.refresh, color: Colors.blue),
-                  onPressed:
-                      _startListeningToLocation, // ✅ Refresh location manually
+                  onPressed: _startLocationUpdates, // ✅ Refresh location
                 ),
               ],
             ),
           ),
           Center(
-            child: Text("Welcome, Mechanic!", style: TextStyle(fontSize: 20)),
+            child: Column(
+              mainAxisAlignment:
+                  MainAxisAlignment.center, // ✅ Center vertically
+              crossAxisAlignment:
+                  CrossAxisAlignment.center, // ✅ Center horizontally
+              children: [
+                Text(
+                  "Welcome, Mechanic!",
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center, // ✅ Center the text
+                ),
+                SizedBox(height: 10), // 🔹 Space between texts
+                Text(
+                  "You have no notification",
+                  style: TextStyle(fontSize: 18, color: Colors.grey),
+                  textAlign: TextAlign.center, // ✅ Center the text
+                ),
+              ],
+            ),
           ),
         ],
       ),
