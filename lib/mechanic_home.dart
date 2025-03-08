@@ -103,6 +103,7 @@ class _MechanicHomeState extends State<MechanicHome> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Mechanic Dashboard"),
+        automaticallyImplyLeading: false, // ✅ Removes the back button
         actions: [
           IconButton(
             icon: Icon(Icons.logout),
@@ -117,6 +118,7 @@ class _MechanicHomeState extends State<MechanicHome> {
           ),
         ],
       ),
+
       body: Stack(
         children: [
           Positioned(

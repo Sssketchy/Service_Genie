@@ -1,8 +1,10 @@
+import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 import 'login_choice_screen.dart';
-import 'nearby_mechanics_screen.dart'; // Import the new screen
+import 'nearby_mechanics_screen.dart';
 
 class CustomerHome extends StatefulWidget {
   const CustomerHome({super.key});
@@ -15,54 +17,86 @@ class _CustomerHomeState extends State<CustomerHome> {
   double? latitude;
   double? longitude;
   bool isFetchingLocation = true;
+  Location location = Location();
+  User? user = FirebaseAuth.instance.currentUser;
+  Timer? _statusUpdateTimer;
+  StreamSubscription<LocationData>? _locationSubscription;
 
   @override
   void initState() {
     super.initState();
-    _getLocation();
+    _startLocationUpdates();
+    _setOnlineStatus();
   }
 
-  Future<void> _getLocation() async {
-    setState(() => isFetchingLocation = true);
-    Location location = Location();
-    bool serviceEnabled;
-    PermissionStatus permissionGranted;
+  void _startLocationUpdates() async {
+    bool serviceEnabled = await location.serviceEnabled();
+    if (!serviceEnabled) serviceEnabled = await location.requestService();
+    if (!serviceEnabled) return;
 
-    serviceEnabled = await location.serviceEnabled();
-    if (!serviceEnabled) {
-      serviceEnabled = await location.requestService();
-      if (!serviceEnabled) {
-        print("❌ Location services are disabled.");
-        setState(() => isFetchingLocation = false);
-        return;
-      }
-    }
-
-    permissionGranted = await location.hasPermission();
+    PermissionStatus permissionGranted = await location.hasPermission();
     if (permissionGranted == PermissionStatus.denied) {
       permissionGranted = await location.requestPermission();
-      if (permissionGranted != PermissionStatus.granted) {
-        print("❌ Location permission denied.");
-        setState(() => isFetchingLocation = false);
-        return;
+      if (permissionGranted != PermissionStatus.granted) return;
+    }
+
+    _locationSubscription?.cancel();
+    _locationSubscription = location.onLocationChanged.listen((
+      LocationData locationData,
+    ) {
+      if (mounted) {
+        setState(() {
+          latitude = locationData.latitude;
+          longitude = locationData.longitude;
+          isFetchingLocation = false;
+        });
+        _updateLocationInFirestore();
       }
+    });
+  }
+
+  Future<void> _updateLocationInFirestore() async {
+    if (user != null && latitude != null && longitude != null) {
+      await FirebaseFirestore.instance.collection("users").doc(user!.uid).set({
+        "latitude": latitude,
+        "longitude": longitude,
+      }, SetOptions(merge: true));
     }
+  }
 
-    try {
-      LocationData locationData = await location.getLocation();
-      print(
-        "✅ Location fetched: Lat=${locationData.latitude}, Lng=${locationData.longitude}",
-      );
+  Future<void> _setOnlineStatus() async {
+    if (user != null) {
+      await FirebaseFirestore.instance.collection("users").doc(user!.uid).set({
+        "status": "online",
+      }, SetOptions(merge: true));
 
-      setState(() {
-        latitude = locationData.latitude;
-        longitude = locationData.longitude;
-        isFetchingLocation = false;
+      _statusUpdateTimer = Timer.periodic(Duration(seconds: 30), (timer) async {
+        if (mounted && user != null) {
+          await FirebaseFirestore.instance
+              .collection("users")
+              .doc(user!.uid)
+              .update({"status": "online"});
+        }
       });
-    } catch (e) {
-      print("❌ Error fetching location: $e");
-      setState(() => isFetchingLocation = false);
     }
+  }
+
+  Future<void> _setOfflineStatus() async {
+    if (user != null) {
+      await FirebaseFirestore.instance
+          .collection("users")
+          .doc(user!.uid)
+          .update({"status": "offline"});
+    }
+    _statusUpdateTimer?.cancel();
+  }
+
+  @override
+  void dispose() {
+    _setOfflineStatus();
+    _statusUpdateTimer?.cancel();
+    _locationSubscription?.cancel();
+    super.dispose();
   }
 
   @override
@@ -74,6 +108,7 @@ class _CustomerHomeState extends State<CustomerHome> {
           IconButton(
             icon: Icon(Icons.logout),
             onPressed: () async {
+              await _setOfflineStatus();
               await FirebaseAuth.instance.signOut();
               Navigator.pushReplacement(
                 context,
@@ -88,21 +123,22 @@ class _CustomerHomeState extends State<CustomerHome> {
           Positioned(
             top: 20,
             left: 20,
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 isFetchingLocation
                     ? CircularProgressIndicator()
                     : Text(
-                      "Your Location:\nLat: $latitude, Lng: $longitude",
+                      "📍 Your Location:\nLat: ${latitude ?? 'Loading...'}, Lng: ${longitude ?? 'Loading...'}",
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                SizedBox(width: 10),
+                SizedBox(height: 10),
                 IconButton(
                   icon: Icon(Icons.refresh, color: Colors.blue),
-                  onPressed: _getLocation,
+                  onPressed: _startLocationUpdates,
                 ),
               ],
             ),
@@ -113,8 +149,6 @@ class _CustomerHomeState extends State<CustomerHome> {
               children: [
                 Text("Welcome, Customer!", style: TextStyle(fontSize: 20)),
                 SizedBox(height: 20),
-
-                // Button to navigate to the "List of Mechanics Nearby" screen
                 ElevatedButton(
                   onPressed: () {
                     Navigator.push(
@@ -137,12 +171,8 @@ class _CustomerHomeState extends State<CustomerHome> {
                   ),
                 ),
                 SizedBox(height: 20),
-
-                // Feature 2 Button (Friend's work)
                 ElevatedButton(
-                  onPressed: () {
-                    // TODO: Friend's feature logic here
-                  },
+                  onPressed: () {},
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     padding: EdgeInsets.symmetric(vertical: 15, horizontal: 40),
