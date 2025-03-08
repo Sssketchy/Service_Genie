@@ -23,32 +23,61 @@ class _MechanicHomeState extends State<MechanicHome> {
   }
 
   Future<void> _getLocation() async {
+    setState(() => isFetchingLocation = true);
     Location location = Location();
+
     bool serviceEnabled = await location.serviceEnabled();
-    if (!serviceEnabled) serviceEnabled = await location.requestService();
-    if (!serviceEnabled) return;
+    if (!serviceEnabled) {
+      serviceEnabled = await location.requestService();
+      if (!serviceEnabled) {
+        print("❌ Location services are disabled.");
+        setState(() => isFetchingLocation = false);
+        return;
+      }
+    }
 
     PermissionStatus permissionGranted = await location.hasPermission();
     if (permissionGranted == PermissionStatus.denied) {
       permissionGranted = await location.requestPermission();
-      if (permissionGranted != PermissionStatus.granted) return;
+      if (permissionGranted != PermissionStatus.granted) {
+        print("❌ Location permission denied.");
+        setState(() => isFetchingLocation = false);
+        return;
+      }
     }
 
     try {
       LocationData locationData = await location.getLocation();
-      double? latitude = locationData.latitude;
-      double? longitude = locationData.longitude;
 
-      // ✅ Store location in Firestore
+      // 🔹 Round to 3 decimal places
+      double roundedLat = double.parse(
+        locationData.latitude!.toStringAsFixed(3),
+      );
+      double roundedLng = double.parse(
+        locationData.longitude!.toStringAsFixed(3),
+      );
+
+      print("✅ Mechanic Location: Lat=$roundedLat, Lng=$roundedLng");
+
+      if (mounted) {
+        setState(() {
+          latitude = roundedLat;
+          longitude = roundedLng;
+          isFetchingLocation = false;
+        });
+      }
+
+      // 🔹 Store rounded values in Firestore
       User? user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         await FirebaseFirestore.instance.collection("users").doc(user.uid).set({
-          "latitude": latitude,
-          "longitude": longitude,
+          "latitude": roundedLat,
+          "longitude": roundedLng,
         }, SetOptions(merge: true));
       }
     } catch (e) {
-      print("Error getting location: $e");
+      print("❌ Error getting location: $e");
+      setState(() => isFetchingLocation = false);
     }
   }
 

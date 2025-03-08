@@ -4,6 +4,7 @@ import 'package:location/location.dart';
 import 'login_choice_screen.dart';
 import 'nearby_mechanics_screen.dart'; // Import the new screen
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'marketplace.dart';
 
 class CustomerHome extends StatefulWidget {
   const CustomerHome({super.key});
@@ -113,9 +114,8 @@ class _CustomerHomeState extends State<CustomerHome> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text("Welcome, Customer!", style: TextStyle(fontSize: 20)),
-                SizedBox(height: 20),
-
-                // Button to navigate to the "List of Mechanics Nearby" screen
+                SizedBox(height: 30), // Increased spacing
+                // Button 1
                 ElevatedButton(
                   onPressed: () {
                     Navigator.push(
@@ -137,9 +137,8 @@ class _CustomerHomeState extends State<CustomerHome> {
                     style: TextStyle(fontSize: 16, color: Colors.white),
                   ),
                 ),
-                SizedBox(height: 20),
-
-                // Feature 2 Button (Friend's work)
+                SizedBox(height: 30), // Ensures equal spacing between buttons
+                // Button 2
                 ElevatedButton(
                   onPressed: () {
                     // TODO: Friend's feature logic here
@@ -153,6 +152,29 @@ class _CustomerHomeState extends State<CustomerHome> {
                   ),
                   child: Text(
                     "Feature 2 (Friend's Work)",
+                    style: TextStyle(fontSize: 16, color: Colors.white),
+                  ),
+                ),
+                SizedBox(height: 30), // Ensures equal spacing between buttons
+                // Button 3
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => MarketplacePage(),
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    padding: EdgeInsets.symmetric(vertical: 15, horizontal: 40),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: Text(
+                    "Feature 3 (CarAccessoriesStore)",
                     style: TextStyle(fontSize: 16, color: Colors.white),
                   ),
                 ),
