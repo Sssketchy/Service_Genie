@@ -1,4 +1,4 @@
-import 'dart:async'; // 🔹 Import Timer
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -19,16 +19,16 @@ class _MechanicHomeState extends State<MechanicHome> {
   bool isFetchingLocation = true;
   Location location = Location();
   User? user = FirebaseAuth.instance.currentUser;
-  Timer? _statusUpdateTimer; // ✅ Changed `late` to nullable
+  Timer? _statusUpdateTimer;
+  StreamSubscription<LocationData>? _locationSubscription;
 
   @override
   void initState() {
     super.initState();
     _startLocationUpdates();
-    _setOnlineStatus(); // ✅ Set mechanic as "online"
+    _setOnlineStatus();
   }
 
-  // ✅ Start real-time location updates
   void _startLocationUpdates() async {
     bool serviceEnabled = await location.serviceEnabled();
     if (!serviceEnabled) serviceEnabled = await location.requestService();
@@ -40,20 +40,21 @@ class _MechanicHomeState extends State<MechanicHome> {
       if (permissionGranted != PermissionStatus.granted) return;
     }
 
-    location.onLocationChanged.listen((LocationData locationData) {
+    _locationSubscription?.cancel();
+    _locationSubscription = location.onLocationChanged.listen((
+      LocationData locationData,
+    ) {
       if (mounted) {
         setState(() {
           latitude = locationData.latitude;
           longitude = locationData.longitude;
           isFetchingLocation = false;
         });
-
         _updateLocationInFirestore();
       }
     });
   }
 
-  // ✅ Store lat/lon in Firestore
   Future<void> _updateLocationInFirestore() async {
     if (user != null && latitude != null && longitude != null) {
       await FirebaseFirestore.instance.collection("users").doc(user!.uid).set({
@@ -63,16 +64,39 @@ class _MechanicHomeState extends State<MechanicHome> {
     }
   }
 
-  // ✅ Set mechanic as "online" and keep updating the status
+  Future<void> _logoutUser() async {
+    if (FirebaseAuth.instance.currentUser != null) {
+      try {
+        // ✅ Set offline status before logging out
+        await _setOfflineStatus();
+
+        // ✅ Sign out user from Firebase
+        await FirebaseAuth.instance.signOut();
+
+        // ✅ Remove OneSignal tag
+        OneSignal.User.removeTag("role");
+
+        // ✅ Navigate to Login screen safely
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => LoginChoiceScreen()),
+          );
+        }
+      } catch (e) {
+        print("❌ Logout Error: $e");
+      }
+    }
+  }
+
   Future<void> _setOnlineStatus() async {
     if (user != null) {
       await FirebaseFirestore.instance.collection("users").doc(user!.uid).set({
         "status": "online",
       }, SetOptions(merge: true));
 
-      // 🔹 Keep updating the "online" status every 30 seconds to prevent disconnection
       _statusUpdateTimer = Timer.periodic(Duration(seconds: 30), (timer) async {
-        if (user != null) {
+        if (mounted && user != null) {
           await FirebaseFirestore.instance
               .collection("users")
               .doc(user!.uid)
@@ -82,7 +106,6 @@ class _MechanicHomeState extends State<MechanicHome> {
     }
   }
 
-  // ✅ Set mechanic as "offline" when logging out
   Future<void> _setOfflineStatus() async {
     if (FirebaseAuth.instance.currentUser != null) {
       try {
@@ -98,7 +121,9 @@ class _MechanicHomeState extends State<MechanicHome> {
 
   @override
   void dispose() {
-    _statusUpdateTimer?.cancel(); // ✅ Check before canceling
+    _setOfflineStatus();
+    _statusUpdateTimer?.cancel();
+    _locationSubscription?.cancel();
     super.dispose();
   }
 
@@ -111,25 +136,17 @@ class _MechanicHomeState extends State<MechanicHome> {
         actions: [
           IconButton(
             icon: Icon(Icons.logout),
-            onPressed: () async {
-              await _setOfflineStatus(); // ✅ Mark as "offline" before logout
-              await FirebaseAuth.instance.signOut();
-              OneSignal.User.removeTag("role");
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => LoginChoiceScreen()),
-              );
-            },
+            onPressed: _logoutUser, // ✅ Calls logout function
           ),
         ],
       ),
-
       body: Stack(
         children: [
           Positioned(
             top: 20,
             left: 20,
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 isFetchingLocation
                     ? CircularProgressIndicator()
@@ -140,31 +157,28 @@ class _MechanicHomeState extends State<MechanicHome> {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                SizedBox(width: 10),
+                SizedBox(height: 10),
                 IconButton(
                   icon: Icon(Icons.refresh, color: Colors.blue),
-                  onPressed: _startLocationUpdates, // ✅ Refresh location
+                  onPressed: _startLocationUpdates,
                 ),
               ],
             ),
           ),
           Center(
             child: Column(
-              mainAxisAlignment:
-                  MainAxisAlignment.center, // ✅ Center vertically
-              crossAxisAlignment:
-                  CrossAxisAlignment.center, // ✅ Center horizontally
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
                   "Welcome, Mechanic!",
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center, // ✅ Center the text
+                  textAlign: TextAlign.center,
                 ),
-                SizedBox(height: 10), // 🔹 Space between texts
+                SizedBox(height: 10),
                 Text(
                   "You have no notification",
                   style: TextStyle(fontSize: 18, color: Colors.grey),
-                  textAlign: TextAlign.center, // ✅ Center the text
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),

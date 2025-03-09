@@ -66,6 +66,31 @@ class _CustomerHomeState extends State<CustomerHome> {
     }
   }
 
+  Future<void> _logoutUser() async {
+    if (FirebaseAuth.instance.currentUser != null) {
+      try {
+        // ✅ Set offline status before logging out
+        await _setOfflineStatus();
+
+        // ✅ Sign out user from Firebase
+        await FirebaseAuth.instance.signOut();
+
+        // ✅ Remove OneSignal tag
+        OneSignal.User.removeTag("role");
+
+        // ✅ Navigate to Login screen safely
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => LoginChoiceScreen()),
+          );
+        }
+      } catch (e) {
+        print("❌ Logout Error: $e");
+      }
+    }
+  }
+
   Future<void> _setOnlineStatus() async {
     if (user != null) {
       await FirebaseFirestore.instance.collection("users").doc(user!.uid).set({
@@ -98,7 +123,7 @@ class _CustomerHomeState extends State<CustomerHome> {
 
   @override
   void dispose() {
-    _setOfflineStatus();
+    _setOfflineStatus(); // ✅ Awaiting ensures Firestore update before disposing
     _statusUpdateTimer?.cancel();
     _locationSubscription?.cancel();
     super.dispose();
@@ -112,19 +137,7 @@ class _CustomerHomeState extends State<CustomerHome> {
         actions: [
           IconButton(
             icon: Icon(Icons.logout),
-            onPressed: () async {
-              if (FirebaseAuth.instance.currentUser != null) {
-                await _setOfflineStatus(); // ✅ Mark as offline before logging out
-                await FirebaseAuth.instance.signOut();
-                OneSignal.User.removeTag("role");
-              }
-              if (mounted) {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => LoginChoiceScreen()),
-                );
-              }
-            },
+            onPressed: _logoutUser, // ✅ Call logout function
           ),
         ],
       ),
