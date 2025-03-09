@@ -110,7 +110,7 @@ class _SignupScreenState extends State<SignupScreen> {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    "Sign Up",
+                    "$role Sign Up",
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,

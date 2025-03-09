@@ -7,7 +7,9 @@ class NearbyMechanicsScreen extends StatelessWidget {
   const NearbyMechanicsScreen({super.key});
 
   // 🔹 Function to get an address from lat/lng using Nominatim API
-  Future<String> _getAddressFromLatLng(double lat, double lon) async {
+  Future<String> _getAddressFromLatLng(double? lat, double? lon) async {
+    if (lat == null || lon == null) return "Location not available";
+
     final url = Uri.parse(
       "https://nominatim.openstreetmap.org/reverse?lat=$lat&lon=$lon&format=json",
     );
@@ -25,7 +27,7 @@ class NearbyMechanicsScreen extends StatelessWidget {
         return "Error fetching address";
       }
     } catch (e) {
-      print("Error fetching address: $e");
+      print("❌ Error fetching address: $e");
       return "Error fetching address";
     }
   }
@@ -49,10 +51,7 @@ class NearbyMechanicsScreen extends StatelessWidget {
               stream:
                   FirebaseFirestore.instance
                       .collection("users")
-                      .where(
-                        "role",
-                        isEqualTo: "Mechanic",
-                      ) // Fetch only mechanics
+                      .where("role", isEqualTo: "Mechanic")
                       .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -73,7 +72,9 @@ class NearbyMechanicsScreen extends StatelessWidget {
                 return ListView.builder(
                   itemCount: mechanics.length,
                   itemBuilder: (context, index) {
-                    var mechanic = mechanics[index];
+                    var mechanic =
+                        mechanics[index].data() as Map<String, dynamic>;
+
                     String name = mechanic["name"] ?? "Unknown";
                     String email = mechanic["email"] ?? "No email provided";
                     String status = mechanic["status"] ?? "offline";
@@ -82,38 +83,44 @@ class NearbyMechanicsScreen extends StatelessWidget {
                     bool isOnline = status == "online";
 
                     return FutureBuilder<String>(
-                      future:
-                          (lat != null && lon != null)
-                              ? _getAddressFromLatLng(lat, lon)
-                              : Future.value("No location available"),
+                      future: _getAddressFromLatLng(lat, lon),
                       builder: (context, addressSnapshot) {
-                        String address = addressSnapshot.data ?? "Fetching...";
+                        String address =
+                            addressSnapshot.data ?? "Fetching address...";
 
-                        return ExpansionTile(
-                          leading: CircleAvatar(
-                            backgroundColor:
-                                isOnline ? Colors.green : Colors.red,
-                            radius: 8,
+                        return Card(
+                          margin: EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
                           ),
-                          title: Text(
-                            name,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w500,
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor:
+                                  isOnline ? Colors.green : Colors.red,
+                              radius: 10,
+                            ),
+                            title: Text(
+                              name,
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  isOnline ? "🟢 Online" : "🔴 Offline",
+                                  style: TextStyle(
+                                    color: isOnline ? Colors.green : Colors.red,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text("📍 Address: $address"),
+                                Text("📧 Email: $email"),
+                              ],
                             ),
                           ),
-                          subtitle: Text(
-                            isOnline ? "🟢 Online" : "🔴 Offline",
-                            style: TextStyle(
-                              color: isOnline ? Colors.green : Colors.red,
-                            ),
-                          ),
-                          children: [
-                            ListTile(
-                              title: Text("📧 Email: $email"),
-                              subtitle: Text("📍 Address: $address"),
-                            ),
-                          ],
                         );
                       },
                     );
