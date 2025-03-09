@@ -21,17 +21,17 @@ class LoginChoiceScreen extends StatelessWidget {
           ),
 
           // Blur Effect
-          Positioned.fill(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(
-                sigmaX: 2,
-                sigmaY: 2,
-              ), // Adjust blur intensity
-              child: Container(
-                color: Colors.black.withOpacity(0),
-              ), // Transparent overlay
-            ),
-          ),
+          // Positioned.fill(
+          //   child: BackdropFilter(
+          //     filter: ImageFilter.blur(
+          //       sigmaX: 2,
+          //       sigmaY: 2,
+          //     ), // Adjust blur intensity
+          //     child: Container(
+          //       color: Colors.black.withOpacity(0),
+          //     ), // Transparent overlay
+          //   ),
+          // ),
 
           // UI Elements
           Center(

@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'login_choice_screen.dart';
 
 class MechanicHome extends StatefulWidget {
@@ -113,6 +114,7 @@ class _MechanicHomeState extends State<MechanicHome> {
             onPressed: () async {
               await _setOfflineStatus(); // ✅ Mark as "offline" before logout
               await FirebaseAuth.instance.signOut();
+              OneSignal.User.removeTag("role");
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => LoginChoiceScreen()),

@@ -1,7 +1,9 @@
 // login_screen.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'customer_home.dart';
 import 'mechanic_home.dart';
 
@@ -21,6 +23,15 @@ class _LoginScreenState extends State<LoginScreen> {
   String email = "", password = "";
   bool isLoading = false;
 
+  Future<void> saveFCMToken(String userId) async {
+    String? token = await FirebaseMessaging.instance.getToken();
+    if (token != null) {
+      await FirebaseFirestore.instance.collection("users").doc(userId).update({
+        "fcmToken": token,
+      });
+    }
+  }
+
   Future<void> login() async {
     setState(() => isLoading = true);
     try {
@@ -30,6 +41,8 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       print("✅ Login Successful: ${userCredential.user!.uid}");
+
+      await saveFCMToken(userCredential.user!.uid);
 
       // Fetch role from Firestore
       DocumentSnapshot userDoc =
@@ -46,6 +59,8 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       String role = userDoc["role"];
+
+      OneSignal.User.addTagWithKey("role", role);
 
       if (role == widget.userRole) {
         Navigator.pushReplacement(

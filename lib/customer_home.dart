@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
+import 'package:onesignal_flutter/onesignal_flutter.dart';
+import 'package:service_genie/request_mechanic_page.dart';
 import 'login_choice_screen.dart';
 import 'nearby_mechanics_screen.dart';
 
@@ -114,6 +116,7 @@ class _CustomerHomeState extends State<CustomerHome> {
               if (FirebaseAuth.instance.currentUser != null) {
                 await _setOfflineStatus(); // ✅ Mark as offline before logging out
                 await FirebaseAuth.instance.signOut();
+                OneSignal.User.removeTag("role");
               }
               if (mounted) {
                 Navigator.pushReplacement(
@@ -179,7 +182,12 @@ class _CustomerHomeState extends State<CustomerHome> {
                 ),
                 SizedBox(height: 20),
                 ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => RequestPage()),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.green,
                     padding: EdgeInsets.symmetric(vertical: 15, horizontal: 40),
@@ -188,7 +196,7 @@ class _CustomerHomeState extends State<CustomerHome> {
                     ),
                   ),
                   child: Text(
-                    "Feature 2 (Friend's Work)",
+                    "Map View",
                     style: TextStyle(fontSize: 16, color: Colors.white),
                   ),
                 ),
