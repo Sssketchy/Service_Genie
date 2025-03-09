@@ -103,6 +103,10 @@ class _RequestPageState extends State<RequestPage> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
+                    sendNotificationToSegment(
+                      "Mechanic Noti",
+                      "Please come to customer",
+                    );
                     print(
                       "Request sent for $selectedItem with details: ${_textController.text}",
                     );

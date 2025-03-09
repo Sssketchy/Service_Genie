@@ -3,11 +3,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-Future<void> sendNotificationToSegment(
-  String segmentName,
-  String title,
-  String message,
-) async {
+Future<void> sendNotificationToSegment(String title, String message) async {
   String oneSignalAppId =
       dotenv.env['ONESIGNAL_APP_ID'] ??
       ""; // Replace with your OneSignal App ID
