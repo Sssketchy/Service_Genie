@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
+import 'package:service_genie/marketplace.dart';
 import 'package:service_genie/request_mechanic_page.dart';
 import 'login_choice_screen.dart';
 import 'nearby_mechanics_screen.dart';
@@ -69,16 +70,10 @@ class _CustomerHomeState extends State<CustomerHome> {
   Future<void> _logoutUser() async {
     if (FirebaseAuth.instance.currentUser != null) {
       try {
-        // ✅ Set offline status before logging out
         await _setOfflineStatus();
-
-        // ✅ Sign out user from Firebase
         await FirebaseAuth.instance.signOut();
-
-        // ✅ Remove OneSignal tag
         OneSignal.User.removeTag("role");
 
-        // ✅ Navigate to Login screen safely
         if (mounted) {
           Navigator.pushReplacement(
             context,
@@ -123,7 +118,7 @@ class _CustomerHomeState extends State<CustomerHome> {
 
   @override
   void dispose() {
-    _setOfflineStatus(); // ✅ Awaiting ensures Firestore update before disposing
+    _setOfflineStatus();
     _statusUpdateTimer?.cancel();
     _locationSubscription?.cancel();
     super.dispose();
@@ -134,89 +129,92 @@ class _CustomerHomeState extends State<CustomerHome> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Customer Dashboard"),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: _logoutUser, // ✅ Call logout function
+        actions: [IconButton(icon: Icon(Icons.logout), onPressed: _logoutUser)],
+      ),
+      body: Column(
+        children: [
+          // Location info aligned to the top left but takes less space
+          Align(
+            alignment: Alignment.topLeft,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  isFetchingLocation
+                      ? CircularProgressIndicator()
+                      : Expanded(
+                        child: Text(
+                          "📍 Your Location:\nLat: ${latitude ?? 'Loading...'}, Lng: ${longitude ?? 'Loading...'}",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                  IconButton(
+                    icon: Icon(Icons.refresh, color: Colors.blue),
+                    onPressed: _startLocationUpdates,
+                  ),
+                ],
+              ),
+            ),
           ),
+          // This spacer helps balance the UI
+          Spacer(flex: 2),
+
+          // Buttons centered on the screen
+          _buildButton("Find Nearby Mechanics", Colors.blue, () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => NearbyMechanicsScreen()),
+            );
+          }),
+
+          SizedBox(height: 15),
+
+          // Map View button is centered properly
+          _buildButton("Map View", Colors.green, () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => RequestPage()),
+            );
+          }),
+
+          SizedBox(height: 15),
+
+          _buildButton("Feature 3 (CarAccessoriesStore)", Colors.orange, () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => MarketplacePage()),
+            );
+          }),
+
+          Spacer(flex: 3), // Ensures the buttons are in the center
         ],
       ),
-      body: Stack(
-        children: [
-          Positioned(
-            top: 20,
-            left: 20,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                isFetchingLocation
-                    ? CircularProgressIndicator()
-                    : Text(
-                      "📍 Your Location:\nLat: ${latitude ?? 'Loading...'}, Lng: ${longitude ?? 'Loading...'}",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                SizedBox(height: 10),
-                IconButton(
-                  icon: Icon(Icons.refresh, color: Colors.blue),
-                  onPressed: _startLocationUpdates,
-                ),
-              ],
+    );
+  }
+
+  Widget _buildButton(String text, Color color, VoidCallback onPressed) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 30.0),
+      child: SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          onPressed: onPressed,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: color,
+            padding: EdgeInsets.symmetric(vertical: 15),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
             ),
           ),
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text("Welcome, Customer!", style: TextStyle(fontSize: 20)),
-                SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => NearbyMechanicsScreen(),
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    padding: EdgeInsets.symmetric(vertical: 15, horizontal: 40),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: Text(
-                    "Find Nearby Mechanics",
-                    style: TextStyle(fontSize: 16, color: Colors.white),
-                  ),
-                ),
-                SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => RequestPage()),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    padding: EdgeInsets.symmetric(vertical: 15, horizontal: 40),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: Text(
-                    "Map View",
-                    style: TextStyle(fontSize: 16, color: Colors.white),
-                  ),
-                ),
-              ],
-            ),
+          child: Text(
+            text,
+            style: TextStyle(fontSize: 16, color: Colors.white),
           ),
-        ],
+        ),
       ),
     );
   }

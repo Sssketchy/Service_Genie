@@ -58,11 +58,26 @@ class _LoginScreenState extends State<LoginScreen> {
         );
       }
 
+      if (!userDoc.exists) {
+        throw FirebaseAuthException(
+          code: "no-user-data",
+          message: "User data missing in Firestore.",
+        );
+      }
+
       String role = userDoc["role"];
 
       OneSignal.User.addTagWithKey("role", role);
 
       if (role == widget.userRole) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder:
+                (context) =>
+                    role == "Customer" ? CustomerHome() : MechanicHome(),
+          ),
+        );
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -91,7 +106,30 @@ class _LoginScreenState extends State<LoginScreen> {
         errorMessage = "You selected the wrong role. Try again.";
       } else if (e.code == 'no-user-data') {
         errorMessage = "User data is missing in Firestore.";
+        throw FirebaseAuthException(
+          code: "wrong-role",
+          message: "Incorrect role selected for this account.",
+        );
       }
+    } on FirebaseAuthException catch (e) {
+      print("❌ FirebaseAuthException: ${e.code} - ${e.message}");
+
+      String errorMessage = "Login failed. Check your credentials.";
+      if (e.code == 'user-not-found') {
+        errorMessage = "No account found with this email. Please sign up.";
+      } else if (e.code == 'wrong-password') {
+        errorMessage = "Incorrect password. Try again.";
+      } else if (e.code == 'invalid-email') {
+        errorMessage = "Enter a valid email address.";
+      } else if (e.code == 'wrong-role') {
+        errorMessage = "You selected the wrong role. Try again.";
+      } else if (e.code == 'no-user-data') {
+        errorMessage = "User data is missing in Firestore.";
+      }
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(errorMessage)));
 
       ScaffoldMessenger.of(
         context,

@@ -1,4 +1,3 @@
-// signup_screen.dart
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -29,47 +28,55 @@ class _SignupScreenState extends State<SignupScreen> {
     setState(() => isLoading = true);
 
     try {
-      // Create user in Firebase Authentication
-      UserCredential userCredential = await FirebaseAuth.instance
+      // ✅ Create user in Firebase Authentication
+      UserCredential userCredential = await _auth
           .createUserWithEmailAndPassword(email: email, password: password);
 
       String uid = userCredential.user!.uid;
 
-      // Store user data in Firestore
-      await FirebaseFirestore.instance.collection("users").doc(uid).set({
+      // ✅ Store user data in Firestore
+      await _firestore.collection("users").doc(uid).set({
         "uid": uid,
         "name": name,
         "email": email,
         "role": role,
+        "status": "online", // Set default status to online after signup
       });
 
-      print("Signup successful for $email");
+      print("✅ Signup successful for $email");
 
-      // Navigate to login screen
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => LoginScreen(userRole: role)),
-      );
+      // ✅ Navigate to login screen
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => LoginScreen(userRole: role)),
+        );
+      }
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("Signup Successful! Please Login.")),
       );
     } on FirebaseAuthException catch (e) {
-      String errorMessage = "Signup failed. Try again.";
+      print("❌ Firebase Signup Error: ${e.code} - ${e.message}");
 
+      String errorMessage = "Signup failed. Try again.";
       if (e.code == 'email-already-in-use') {
         errorMessage = "This email is already registered. Try logging in!";
-      } else if (e.code == 'timeout') {
-        errorMessage = "Signup timed out. Please check your connection.";
+      } else if (e.code == 'weak-password') {
+        errorMessage = "Password is too weak. Try a stronger one.";
+      } else if (e.code == 'invalid-email') {
+        errorMessage = "Please enter a valid email address.";
       }
 
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(errorMessage)));
     } catch (e) {
-      print("Signup Error: $e");
+      print("❌ Unexpected Signup Error: $e");
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("An error occurred. Please try again.")),
+        SnackBar(
+          content: Text("An unexpected error occurred. Please try again."),
+        ),
       );
     }
 
@@ -95,17 +102,25 @@ class _SignupScreenState extends State<SignupScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  "Sign Up",
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                // ✅ Title Box with Black Background
+                Container(
+                  padding: EdgeInsets.symmetric(vertical: 8, horizontal: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.black,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    "Sign Up",
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
                 SizedBox(height: 20),
 
-                // Name Field
+                // ✅ Name Field
                 TextField(
                   decoration: InputDecoration(
                     filled: true,
@@ -121,7 +136,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 SizedBox(height: 15),
 
-                // Email Field
+                // ✅ Email Field
                 TextField(
                   decoration: InputDecoration(
                     filled: true,
@@ -137,7 +152,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 SizedBox(height: 15),
 
-                // Password Field
+                // ✅ Password Field
                 TextField(
                   obscureText: true,
                   decoration: InputDecoration(
@@ -154,25 +169,34 @@ class _SignupScreenState extends State<SignupScreen> {
                 ),
                 SizedBox(height: 15),
 
-                // Role Dropdown
-                DropdownButton<String>(
-                  value: role,
-                  dropdownColor: Colors.white,
-                  items:
-                      ["Customer", "Mechanic"].map((role) {
-                        return DropdownMenuItem(
-                          value: role,
-                          child: Text(
-                            role,
-                            style: TextStyle(color: Colors.black),
-                          ),
-                        );
-                      }).toList(),
-                  onChanged: (value) => setState(() => role = value!),
+                // ✅ Role Dropdown
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: role,
+                      dropdownColor: Colors.white,
+                      items:
+                          ["Customer", "Mechanic"].map((role) {
+                            return DropdownMenuItem(
+                              value: role,
+                              child: Text(
+                                role,
+                                style: TextStyle(color: Colors.black),
+                              ),
+                            );
+                          }).toList(),
+                      onChanged: (value) => setState(() => role = value!),
+                    ),
+                  ),
                 ),
                 SizedBox(height: 20),
 
-                // Signup Button
+                // ✅ Signup Button
                 isLoading
                     ? CircularProgressIndicator()
                     : ElevatedButton(
