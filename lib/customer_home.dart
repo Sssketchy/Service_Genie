@@ -161,59 +161,73 @@ class _CustomerHomeState extends State<CustomerHome> {
             ),
           ),
           // This spacer helps balance the UI
-          Spacer(flex: 2),
+          Spacer(),
 
-          // Buttons centered on the screen
-          _buildButton("Find Nearby Mechanics", Colors.blue, () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => NearbyMechanicsScreen()),
-            );
-          }),
+          // 2 Buttons in a Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildSquareButton("Find Nearby Mechanics", Colors.blue, () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => NearbyMechanicsScreen(),
+                  ),
+                );
+              }),
+              SizedBox(width: 15),
+              _buildSquareButton("Map View", Colors.green, () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => RequestPage()),
+                );
+              }),
+            ],
+          ),
 
           SizedBox(height: 15),
 
-          // Map View button is centered properly
-          _buildButton("Map View", Colors.green, () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => RequestPage()),
-            );
-          }),
+          // Single Button in Centered Row
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildSquareButton("Car Accessories Store", Colors.orange, () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => MarketplacePage()),
+                );
+              }),
+            ],
+          ),
 
-          SizedBox(height: 15),
-
-          _buildButton("Feature 3 (CarAccessoriesStore)", Colors.orange, () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => MarketplacePage()),
-            );
-          }),
-
-          Spacer(flex: 3), // Ensures the buttons are in the center
+          Spacer(),
         ],
       ),
     );
   }
 
-  Widget _buildButton(String text, Color color, VoidCallback onPressed) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 30.0),
-      child: SizedBox(
-        width: double.infinity,
-        child: ElevatedButton(
-          onPressed: onPressed,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: color,
-            padding: EdgeInsets.symmetric(vertical: 15),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
+  /// 📌 Helper method to build square buttons in a row layout
+  Widget _buildSquareButton(String text, Color color, VoidCallback onPressed) {
+    return Container(
+      width: 150, // 🔹 Square size
+      height: 150,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: color,
+          padding: EdgeInsets.all(15),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
-          child: Text(
-            text,
-            style: TextStyle(fontSize: 16, color: Colors.white),
-          ),
+        ),
+        child: Text(
+          text,
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 16, color: Colors.white),
         ),
       ),
     );
