@@ -82,13 +82,16 @@ class _CustomerHomeState extends State<CustomerHome> {
   }
 
   Future<void> _setOfflineStatus() async {
-    if (user != null) {
-      await FirebaseFirestore.instance
-          .collection("users")
-          .doc(user!.uid)
-          .update({"status": "offline"});
+    if (FirebaseAuth.instance.currentUser != null) {
+      try {
+        await FirebaseFirestore.instance
+            .collection("users")
+            .doc(FirebaseAuth.instance.currentUser!.uid)
+            .update({"status": "offline"});
+      } catch (e) {
+        print("❌ Firestore Permission Error: $e");
+      }
     }
-    _statusUpdateTimer?.cancel();
   }
 
   @override
@@ -108,12 +111,16 @@ class _CustomerHomeState extends State<CustomerHome> {
           IconButton(
             icon: Icon(Icons.logout),
             onPressed: () async {
-              await _setOfflineStatus();
-              await FirebaseAuth.instance.signOut();
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(builder: (context) => LoginChoiceScreen()),
-              );
+              if (FirebaseAuth.instance.currentUser != null) {
+                await _setOfflineStatus(); // ✅ Mark as offline before logging out
+                await FirebaseAuth.instance.signOut();
+              }
+              if (mounted) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => LoginChoiceScreen()),
+                );
+              }
             },
           ),
         ],

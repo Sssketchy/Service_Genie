@@ -82,7 +82,7 @@ class _LoginScreenState extends State<LoginScreen> {
         context,
       ).showSnackBar(SnackBar(content: Text(errorMessage)));
     } catch (e) {
-      print("❌ Unexpected Error: $e"); // Print the full error in console
+      print("❌ Unexpected Error: $e");
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text("Unexpected Error: $e")));
@@ -96,36 +96,59 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: Stack(
         children: [
-          // Background Image
+          // ✅ Background Image
           Positioned.fill(
             child: Image.asset(
-              "assets/handshake.webp", // Replace with your image file
+              "assets/handshake.webp", // Keep your wallpaper
               fit: BoxFit.cover,
             ),
           ),
 
-          // Login UI
+          // ✅ Centered Login Box
           Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 30),
+            child: Container(
+              padding: EdgeInsets.all(25),
+              width: 350, // Adjust width to fit content
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.7), // ✅ Slight transparency
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black26,
+                    blurRadius: 10,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    "${widget.userRole} Login",
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                  // ✅ Black Box for Mechanic Login (Full Width)
+                  Container(
+                    width: double.infinity, // Make it take full width
+                    padding: EdgeInsets.symmetric(vertical: 10),
+                    decoration: BoxDecoration(
+                      color: Colors.black, // Black background
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Center(
+                      child: Text(
+                        "${widget.userRole} Login",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white, // White text inside black box
+                        ),
+                      ),
                     ),
                   ),
                   SizedBox(height: 20),
 
-                  // Email TextField
+                  // ✅ Email TextField
                   TextField(
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: Colors.white.withOpacity(0.9),
+                      fillColor: Colors.grey[100], // Light grey fill
                       hintText: "Enter Email",
                       prefixIcon: Icon(Icons.email, color: Colors.black),
                       border: OutlineInputBorder(
@@ -137,12 +160,12 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   SizedBox(height: 15),
 
-                  // Password TextField
+                  // ✅ Password TextField
                   TextField(
                     obscureText: true,
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: Colors.white.withOpacity(0.9),
+                      fillColor: Colors.grey[100],
                       hintText: "Enter Password",
                       prefixIcon: Icon(Icons.lock, color: Colors.black),
                       border: OutlineInputBorder(
@@ -154,7 +177,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   SizedBox(height: 20),
 
-                  // Login Button
+                  // ✅ Login Button
                   isLoading
                       ? CircularProgressIndicator()
                       : ElevatedButton(

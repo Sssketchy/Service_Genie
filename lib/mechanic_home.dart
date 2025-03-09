@@ -83,13 +83,16 @@ class _MechanicHomeState extends State<MechanicHome> {
 
   // ✅ Set mechanic as "offline" when logging out
   Future<void> _setOfflineStatus() async {
-    if (user != null) {
-      await FirebaseFirestore.instance
-          .collection("users")
-          .doc(user!.uid)
-          .update({"status": "offline"});
+    if (FirebaseAuth.instance.currentUser != null) {
+      try {
+        await FirebaseFirestore.instance
+            .collection("users")
+            .doc(FirebaseAuth.instance.currentUser!.uid)
+            .update({"status": "offline"});
+      } catch (e) {
+        print("❌ Firestore Permission Error: $e");
+      }
     }
-    _statusUpdateTimer?.cancel(); // ✅ Check if timer is null before canceling
   }
 
   @override

@@ -292,10 +292,10 @@ packages:
     dependency: transitive
     description:
       name: google_maps_flutter_android
-      sha256: "721ffae2240e957c04b0de19ffd4b68580adb57a8224496b7fb55fad23aec98a"
+      sha256: "3b3f55d6b4f2bde6bbe80dca0bf8d228313005c9ce8a97a1d24257600d8c92e5"
       url: "https://pub.dev"
     source: hosted
-    version: "2.14.13"
+    version: "2.14.14"
   google_maps_flutter_ios:
     dependency: transitive
     description:
@@ -316,10 +316,10 @@ packages:
     dependency: transitive
     description:
       name: google_maps_flutter_web
-      sha256: a9fd5356d46f54744ced1ebedbbf212f3d2cb71e95d79b1d08690c1ec33dc584
+      sha256: bbeb93807a34bfeebdb7ace506bd2bc400a3915dc96736254fea721eb264caa0
       url: "https://pub.dev"
     source: hosted
-    version: "0.5.10+1"
+    version: "0.5.11"
   html:
     dependency: transitive
     description:
@@ -352,14 +352,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.5.3"
-  js:
-    dependency: transitive
-    description:
-      name: js
-      sha256: f2c445dce49627136094980615a031419f7f3eb393237e4ecd97ac15dea343f3
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.6.7"
   json_annotation:
     dependency: transitive
     description:
@@ -404,26 +396,26 @@ packages:
     dependency: "direct main"
     description:
       name: location
-      sha256: "06be54f682c9073cbfec3899eb9bc8ed90faa0e17735c9d9fa7fe426f5be1dd1"
+      sha256: c2c4304071ec860525d5c50d142410072f8620c1d9f74874811af2e804e1a9c8
       url: "https://pub.dev"
     source: hosted
-    version: "5.0.3"
+    version: "8.0.0"
   location_platform_interface:
     dependency: transitive
     description:
       name: location_platform_interface
-      sha256: "8aa1d34eeecc979d7c9fe372931d84f6d2ebbd52226a54fe1620de6fdc0753b1"
+      sha256: a3404ea6d74e89b121630be62ed8edcc7b39fd108bd19805d0ae55c397135dd7
       url: "https://pub.dev"
     source: hosted
-    version: "3.1.2"
+    version: "6.0.0"
   location_web:
     dependency: transitive
     description:
       name: location_web
-      sha256: ec484c66e8a4ff1ee5d044c203f4b6b71e3a0556a97b739a5bc9616de672412b
+      sha256: "744bdff53dc455a2dc9a34474c49cde364d4fbef2aee009f8b0b4b68570c27a1"
       url: "https://pub.dev"
     source: hosted
-    version: "4.2.0"
+    version: "6.0.0"
   matcher:
     dependency: transitive
     description:
@@ -468,10 +460,10 @@ packages:
     dependency: transitive
     description:
       name: path_provider_android
-      sha256: "4adf4fd5423ec60a29506c76581bc05854c55e3a0b72d35bb28d661c9686edf2"
+      sha256: "0ca7359dad67fd7063cb2892ab0c0737b2daafd807cf1acecd62374c8fae6c12"
       url: "https://pub.dev"
     source: hosted
-    version: "2.2.15"
+    version: "2.2.16"
   path_provider_foundation:
     dependency: transitive
     description:
