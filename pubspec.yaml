@@ -81,6 +81,17 @@ flutter:
     - assets/rain_visor.jpg
     - assets/wheel_cover.jpg
     - assets/door_protector.webp
+    - assets/car_logos/toyota.png
+    - assets/car_logos/honda.png
+    - assets/car_logos/ford.png
+    - assets/car_logos/bmw.png
+    - assets/car_logos/mercedes.png
+    - assets/car_logos/suzuki.png
+    - assets/car_logos/hyundai.png
+    - assets/car_logos/audi.png
+    - assets/car_logos/volkswagen.png
+    - assets/car_logos/mahindra.png
+    - assets/car_logos/tata.png
     
 
 

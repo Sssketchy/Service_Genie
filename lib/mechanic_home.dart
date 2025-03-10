@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'login_choice_screen.dart';
+import 'notification_service.dart';
 
 class MechanicHome extends StatefulWidget {
   const MechanicHome({super.key});
@@ -67,16 +68,10 @@ class _MechanicHomeState extends State<MechanicHome> {
   Future<void> _logoutUser() async {
     if (FirebaseAuth.instance.currentUser != null) {
       try {
-        // ✅ Set offline status before logging out
         await _setOfflineStatus();
-
-        // ✅ Sign out user from Firebase
         await FirebaseAuth.instance.signOut();
-
-        // ✅ Remove OneSignal tag
         OneSignal.User.removeTag("role");
 
-        // ✅ Navigate to Login screen safely
         if (mounted) {
           Navigator.pushReplacement(
             context,
@@ -119,6 +114,49 @@ class _MechanicHomeState extends State<MechanicHome> {
     }
   }
 
+  Future<void> _updateRequestStatus(
+    String requestId,
+    String status,
+    String customerId,
+  ) async {
+    await FirebaseFirestore.instance
+        .collection("service_requests")
+        .doc(requestId)
+        .update({"status": status, "mechanicId": user!.uid});
+
+    // 🔹 Fetch customer's OneSignal Player ID from Firestore
+    DocumentSnapshot userDoc =
+        await FirebaseFirestore.instance
+            .collection("users")
+            .doc(customerId)
+            .get();
+
+    Map<String, dynamic>? userData = userDoc.data() as Map<String, dynamic>?;
+
+    if (userData == null || !userData.containsKey("playerId")) {
+      print("❌ User has no OneSignal Player ID.");
+      return;
+    }
+
+    String playerId = userData["playerId"];
+
+    // 🔹 Send notification to the customer
+    String notificationMessage =
+        (status == "accepted")
+            ? "✅ Your service request has been accepted!"
+            : "❌ Your service request has been rejected.";
+
+    sendNotificationToUser(
+      playerId,
+      "Service Request Update",
+      notificationMessage,
+    );
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text("Request marked as $status.")));
+  }
+
   @override
   void dispose() {
     _setOfflineStatus();
@@ -132,55 +170,122 @@ class _MechanicHomeState extends State<MechanicHome> {
     return Scaffold(
       appBar: AppBar(
         title: Text("Mechanic Dashboard"),
-        automaticallyImplyLeading: false, // ✅ Removes the back button
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout),
-            onPressed: _logoutUser, // ✅ Calls logout function
-          ),
-        ],
+        automaticallyImplyLeading: false,
+        actions: [IconButton(icon: Icon(Icons.logout), onPressed: _logoutUser)],
       ),
-      body: Stack(
+      body: Column(
         children: [
-          Positioned(
-            top: 20,
-            left: 20,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                isFetchingLocation
-                    ? CircularProgressIndicator()
-                    : Text(
-                      "📍 Your Location:\nLat: ${latitude ?? 'Loading...'}, Lng: ${longitude ?? 'Loading...'}",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+          // Location info
+          Align(
+            alignment: Alignment.topLeft,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  isFetchingLocation
+                      ? CircularProgressIndicator()
+                      : Expanded(
+                        child: Text(
+                          "📍 Your Location:\nLat: ${latitude ?? 'Loading...'}, Lng: ${longitude ?? 'Loading...'}",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                    ),
-                SizedBox(height: 10),
-                IconButton(
-                  icon: Icon(Icons.refresh, color: Colors.blue),
-                  onPressed: _startLocationUpdates,
-                ),
-              ],
+                  IconButton(
+                    icon: Icon(Icons.refresh, color: Colors.blue),
+                    onPressed: _startLocationUpdates,
+                  ),
+                ],
+              ),
             ),
           ),
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  "Welcome, Mechanic!",
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 10),
-                Text(
-                  "You have no notification",
-                  style: TextStyle(fontSize: 18, color: Colors.grey),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+
+          // Service Requests List
+          Expanded(
+            child: StreamBuilder<QuerySnapshot>(
+              stream:
+                  FirebaseFirestore.instance
+                      .collection("service_requests")
+                      .where(
+                        "status",
+                        isEqualTo: "pending",
+                      ) // Show only pending requests
+                      .snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                }
+
+                if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                  return Center(
+                    child: Text(
+                      "No service requests at the moment.",
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                  );
+                }
+
+                var requests = snapshot.data!.docs;
+
+                return ListView.builder(
+                  itemCount: requests.length,
+                  itemBuilder: (context, index) {
+                    var request = requests[index];
+                    Map<String, dynamic> requestData =
+                        request.data() as Map<String, dynamic>;
+
+                    return Card(
+                      margin: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      child: ListTile(
+                        title: Text(
+                          "🔧 Service Issue: ${requestData["issue"]}",
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text("👤 Customer: ${requestData["customerName"]}"),
+                            Text("📞 Phone: ${requestData["phone"]}"),
+                            Text(
+                              "🚗 Car: ${requestData["carName"]} (${requestData["carModel"]})",
+                            ),
+                            Text("📄 License: ${requestData["license"]}"),
+                            Text("📄 Insurance: ${requestData["insurance"]}"),
+                            Text("📝 Details: ${requestData["description"]}"),
+                          ],
+                        ),
+                        trailing: Column(
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                Icons.check_circle,
+                                color: Colors.green,
+                              ),
+                              onPressed:
+                                  () => _updateRequestStatus(
+                                    request.id,
+                                    "accepted",
+                                    requestData["customerId"],
+                                  ),
+                            ),
+                            IconButton(
+                              icon: Icon(Icons.cancel, color: Colors.red),
+                              onPressed:
+                                  () => _updateRequestStatus(
+                                    request.id,
+                                    "rejected",
+                                    requestData["customerId"],
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
             ),
           ),
         ],

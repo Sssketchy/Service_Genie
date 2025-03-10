@@ -4,10 +4,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:location/location.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
+import 'package:service_genie/update_profile_screen.dart';
 import 'package:service_genie/marketplace.dart';
 import 'package:service_genie/request_mechanic_page.dart';
 import 'login_choice_screen.dart';
 import 'nearby_mechanics_screen.dart';
+import 'update_profile_screen.dart'; // Import the new screen
 
 class CustomerHome extends StatefulWidget {
   const CustomerHome({super.key});
@@ -187,7 +189,7 @@ class _CustomerHomeState extends State<CustomerHome> {
 
           SizedBox(height: 15),
 
-          // Single Button in Centered Row
+          // 2nd Row with "Car Accessories Store" and "Update Profile"
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -195,6 +197,15 @@ class _CustomerHomeState extends State<CustomerHome> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => MarketplacePage()),
+                );
+              }),
+              SizedBox(width: 15),
+              _buildSquareButton("Update Profile", Colors.purple, () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => UpdateProfileScreen(),
+                  ),
                 );
               }),
             ],
