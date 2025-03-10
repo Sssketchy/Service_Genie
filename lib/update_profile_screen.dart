@@ -9,6 +9,7 @@ class UpdateProfileScreen extends StatefulWidget {
 
 class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
   final _formKey = GlobalKey<FormState>();
+  final TextEditingController nameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController carNameController = TextEditingController();
   final TextEditingController carModelController = TextEditingController();
@@ -46,6 +47,7 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
         .collection("customer_details")
         .doc(user.uid)
         .set({
+          "name": nameController.text, // 🔹 Storing name in Firestore
           "phone": phoneController.text,
           "carName": carNameController.text,
           "carModel": carModelController.text,
@@ -122,6 +124,14 @@ class _UpdateProfileScreenState extends State<UpdateProfileScreen> {
               key: _formKey,
               child: Column(
                 children: [
+                  // 🔹 Name Field (First Entry)
+                  _buildTextField(
+                    "Full Name",
+                    nameController,
+                    TextInputType.text,
+                  ),
+                  SizedBox(height: 15),
+
                   _buildTextField(
                     "Phone Number",
                     phoneController,
