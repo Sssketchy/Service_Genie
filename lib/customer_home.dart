@@ -6,6 +6,7 @@ import 'package:location/location.dart';
 import 'package:onesignal_flutter/onesignal_flutter.dart';
 import 'package:service_genie/marketplace.dart';
 import 'package:service_genie/request_mechanic_page.dart';
+import 'package:service_genie/chat_room.dart'; // ✅ Import Chat Room Page
 import 'login_choice_screen.dart';
 import 'nearby_mechanics_screen.dart';
 
@@ -133,7 +134,6 @@ class _CustomerHomeState extends State<CustomerHome> {
       ),
       body: Column(
         children: [
-          // Location info aligned to the top left but takes less space
           Align(
             alignment: Alignment.topLeft,
             child: Padding(
@@ -160,10 +160,8 @@ class _CustomerHomeState extends State<CustomerHome> {
               ),
             ),
           ),
-          // This spacer helps balance the UI
           Spacer(),
 
-          // 2 Buttons in a Row
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -187,7 +185,6 @@ class _CustomerHomeState extends State<CustomerHome> {
 
           SizedBox(height: 15),
 
-          // Single Button in Centered Row
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -200,16 +197,31 @@ class _CustomerHomeState extends State<CustomerHome> {
             ],
           ),
 
+          SizedBox(height: 15),
+
+          // ✅ New "Chat Room" Button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              _buildSquareButton("Chat Room", Colors.purple, () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ChatRoomPage()),
+                );
+              }),
+            ],
+          ),
+
           Spacer(),
         ],
       ),
     );
   }
 
-  /// 📌 Helper method to build square buttons in a row layout
+  /// 📌 Helper method to build square buttons
   Widget _buildSquareButton(String text, Color color, VoidCallback onPressed) {
     return Container(
-      width: 150, // 🔹 Square size
+      width: 150,
       height: 150,
       decoration: BoxDecoration(
         color: color,
